@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://b8khm2ljjx8se"]
+
+[ext_resource type="PackedScene" uid="uid://6vxwxtp3eq8u" path="res://player/projectile/projectile_3d.tscn" id="1_kixxk"]
+[ext_resource type="AudioStream" uid="uid://bwwqtfyu64rke" path="res://Sounds/explosion.mp3" id="2_hgguu"]
+
+[sub_resource type="GDScript" id="GDScript_kixxk"]
+script/source = "extends Area3D
+
+const SPEED = 15.0
+const RANGE = 40.0
+
+var travelled_distance = 0.0
+
+func _ready():
+	body_entered.connect(_on_body_entered)
+
+func _physics_process(delta: float) -> void:
+	position += -transform.basis.z * SPEED * delta
+	travelled_distance += SPEED * delta
+	if travelled_distance > RANGE:
+		queue_free()
+
+func _on_body_entered(body):
+	if body.has_method(\"take_damage\"):
+		body.take_damage(10)
+	explode()
+
+func explode():
+	set_physics_process(false)
+	var tween = create_tween()
+	tween.tween_property(self, \"scale\", Vector3(5, 5, 5), 0.2)
+	tween.finished.connect(queue_free)
+"
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hgguu"]
+radius = 0.17402369
+
+[node name="Bullet3D" type="Area3D" unique_id=329938409]
+top_level = true
+collision_layer = 9
+script = SubResource("GDScript_kixxk")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2015198988]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0, 0)
+shape = SubResource("SphereShape3D_hgguu")
+
+[node name="projectile3D" parent="." unique_id=1734527354 instance=ExtResource("1_kixxk")]
+transform = Transform3D(7.54979e-08, 0, 1, 0, 1, 0, -1, 0, 7.54979e-08, 0, 0, 0)
+
+[node name="ExplosionSound" type="AudioStreamPlayer" parent="." unique_id=1454912829]
+stream = ExtResource("2_hgguu")

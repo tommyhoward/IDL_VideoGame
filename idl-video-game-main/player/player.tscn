@@ -1,0 +1,207 @@
+[gd_scene format=3 uid="uid://0cks41ffy2x7"]
+
+[ext_resource type="Texture2D" uid="uid://3oe26nw37amm" path="res://Other_Art/FireHand.png" id="2_g1dw6"]
+[ext_resource type="Texture2D" uid="uid://baw22ll83ros1" path="res://player/reticle.png" id="2_rkbax"]
+[ext_resource type="Texture2D" uid="uid://bo6mkt77ixqnx" path="res://Other_Art/righthand.png" id="3_g1dw6"]
+[ext_resource type="Shader" uid="uid://b20bigiyuu3cl" path="res://player/player.gdshader" id="4_yw30f"]
+[ext_resource type="FontFile" uid="uid://bp2n72qik60ql" path="res://Sounds/who asks satan.ttf" id="5_qjkh3"]
+
+[sub_resource type="GDScript" id="GDScript_oul6g"]
+script/source = "extends CharacterBody3D
+
+const WALK_SPEED = 5.0
+const SPRINT_SPEED = 8.0
+const JUMP_VELOCITY = 4.5
+const SENSITIVITY = 0.003
+
+var score = 0
+var gravity = ProjectSettings.get_setting(\"physics/3d/default_gravity\")
+
+@onready var camera = $Camera3D
+@onready var anim = $MovingCanvasLayer/CastingHand
+
+func _ready():
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+func _unhandled_input(event):
+	if event is InputEventMouseMotion:
+		rotate_y(-event.relative.x * SENSITIVITY)
+		camera.rotate_x(-event.relative.y * SENSITIVITY)
+		camera.rotation.x = clamp(camera.rotation.x, deg_to_rad(-80), deg_to_rad(80))
+
+func _physics_process(delta):
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+	$StaticCanvasLayer/ScoreLabel.text = \"Score: \" + str(score)
+
+	if Input.is_action_just_pressed(\"ui_accept\") and is_on_floor():
+		velocity.y = JUMP_VELOCITY
+
+	var speed = SPRINT_SPEED if Input.is_key_pressed(KEY_SHIFT) else WALK_SPEED
+	var input_dir = Input.get_vector(\"a\", \"d\", \"w\", \"s\")
+	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	
+	if direction:
+		velocity.x = direction.x * speed
+		velocity.z = direction.z * speed
+	else:
+		velocity.x = move_toward(velocity.x, 0, speed)
+		velocity.z = move_toward(velocity.z, 0, speed)
+
+	move_and_slide()
+	
+	
+	if Input.is_action_pressed(\"shoot\") and %Timer.is_stopped(): 
+		anim.play(\"Cast\")
+		shoot_bullet()
+
+
+func shoot_bullet():
+	const BULLET_3D = preload(\"uid://b8khm2ljjx8se\")
+	var new_bullet = BULLET_3D.instantiate()
+	%Marker3D.add_child(new_bullet)
+	
+	new_bullet.global_transform = %Marker3D.global_transform
+	
+	%Timer.start()
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kqu6x"]
+
+[sub_resource type="GDScript" id="GDScript_rkbax"]
+script/source = "extends CanvasLayer
+
+const SWAY_AMOUNT = 50.0
+const SMOOTHNESS = 4.0
+
+func _process(delta):
+	var mouse_input = Input.get_last_mouse_velocity().x
+	
+
+	var target_offset = -mouse_input * (SWAY_AMOUNT / 1000.0)
+	
+
+	offset.x = lerp(offset.x, target_offset, delta * SMOOTHNESS)
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yw30f"]
+atlas = ExtResource("2_g1dw6")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qjkh3"]
+atlas = ExtResource("2_g1dw6")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_g6k8r"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yw30f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qjkh3")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g6k8r"]
+atlas = ExtResource("3_g1dw6")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_boad6"]
+atlas = ExtResource("3_g1dw6")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rgyib"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g6k8r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_boad6")
+}],
+"loop": false,
+"name": &"Cast",
+"speed": 5.0
+}]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qjkh3"]
+shader = ExtResource("4_yw30f")
+shader_parameter/pixel_size = 4
+
+[sub_resource type="LabelSettings" id="LabelSettings_yw30f"]
+font = ExtResource("5_qjkh3")
+font_size = 100
+
+[node name="player" type="CharacterBody3D" unique_id=2030792909]
+collision_layer = 2
+script = SubResource("GDScript_oul6g")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1091221802]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_kqu6x")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1649702998]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5355151, 0)
+
+[node name="Marker3D" type="Marker3D" parent="Camera3D" unique_id=16183256]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38835096, -0.2653855, -1.0431442)
+
+[node name="Reticle" type="TextureRect" parent="." unique_id=310028781]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.5
+offset_top = -24.5
+offset_right = 24.5
+offset_bottom = 24.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+texture = ExtResource("2_rkbax")
+expand_mode = 1
+
+[node name="Timer" type="Timer" parent="." unique_id=98675485]
+unique_name_in_owner = true
+one_shot = true
+
+[node name="MovingCanvasLayer" type="CanvasLayer" parent="." unique_id=1708647175]
+script = SubResource("GDScript_rkbax")
+
+[node name="FireHand" type="AnimatedSprite2D" parent="MovingCanvasLayer" unique_id=844312478]
+position = Vector2(773.00006, 788.0001)
+rotation = 0.21485516
+scale = Vector2(13.7265625, 13.7265625)
+sprite_frames = SubResource("SpriteFrames_g6k8r")
+autoplay = "default"
+
+[node name="CastingHand" type="AnimatedSprite2D" parent="MovingCanvasLayer" unique_id=1863202936]
+position = Vector2(1112, 732.99994)
+rotation = -0.1656294
+scale = Vector2(18.57031, 14.737005)
+sprite_frames = SubResource("SpriteFrames_rgyib")
+animation = &"Cast"
+
+[node name="ColorRect" type="ColorRect" parent="MovingCanvasLayer" unique_id=1868694165]
+material = SubResource("ShaderMaterial_qjkh3")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StaticCanvasLayer" type="CanvasLayer" parent="." unique_id=336187242]
+
+[node name="ScoreLabel" type="Label" parent="StaticCanvasLayer" unique_id=1182626322]
+offset_right = 220.86957
+offset_bottom = 127.0
+text = "test"
+label_settings = SubResource("LabelSettings_yw30f")

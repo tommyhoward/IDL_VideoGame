@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://dbtuj3cm8dagr"]
+
+[ext_resource type="PackedScene" uid="uid://b8aygyvvlouhf" path="res://mob/RedGolem_model.tscn" id="1_6ro4h"]
+
+[sub_resource type="GDScript" id="GDScript_6ro4h"]
+script/source = "extends CharacterBody3D
+
+@export var health: int = 10
+@export var movement_speed: float = 4.0
+@onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
+
+var gravity = ProjectSettings.get_setting(\"physics/3d/default_gravity\")
+var player: CharacterBody3D
+
+func _ready():
+	player = get_tree().root.find_child(\"player\", true, false)
+
+func take_damage(amount: int):
+	health -= amount
+	if health <= 0:
+		if player:
+			player.score += 1
+			print(player.score)
+		queue_free()
+
+func _physics_process(delta: float):
+	if not is_on_floor():
+		velocity.y -= gravity * delta
+
+	if not player:
+		move_and_slide()
+		return
+
+	nav_agent.target_position = player.global_position
+	
+	if nav_agent.is_navigation_finished():
+		velocity.x = 0
+		velocity.z = 0
+		move_and_slide()
+		return
+
+	var current_pos = global_position
+	var next_path_pos = nav_agent.get_next_path_position()
+	var direction = (next_path_pos - current_pos).normalized()
+	
+	velocity.x = direction.x * movement_speed
+	velocity.z = direction.z * movement_speed
+	
+	if velocity.length() > 0.1:
+		look_at(Vector3(player.global_position.x, global_position.y, player.global_position.z), Vector3.UP)
+		rotate_y(PI)
+	
+	move_and_slide()
+"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_scijv"]
+radius = 0.0078125
+height = 0.021064758
+
+[node name="Golem" type="CharacterBody3D" unique_id=174762589]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.10608524, 0)
+collision_layer = 3
+collision_mask = 11
+script = SubResource("GDScript_6ro4h")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=657854927]
+transform = Transform3D(60, 0, 0, 0, 60, 0, 0, 0, 60, 0, 0.64566135, 0)
+shape = SubResource("CapsuleShape3D_scijv")
+
+[node name="RedGolem_model" parent="." unique_id=139075222 instance=ExtResource("1_6ro4h")]
+transform = Transform3D(50, 0, 8.742278e-06, 0, 50, 0, -8.742278e-06, 0, 50, 0, 0, 0)
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=32471426]
