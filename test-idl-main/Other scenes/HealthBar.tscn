@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://d3ogsqcud56u4"]
+
+[ext_resource type="Script" uid="uid://c825af07mn2ch" path="res://Other scenes/health_bar.gd" id="1_27c6l"]
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_lbidw"]
+viewport_path = NodePath("SubViewport")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_27c6l"]
+viewport_path = NodePath("SubViewport")
+
+[node name="Sprite3D" type="Sprite3D" unique_id=667872274]
+texture = SubResource("ViewportTexture_lbidw")
+script = ExtResource("1_27c6l")
+
+[node name="SubViewport" type="SubViewport" parent="." unique_id=1215951721]
+size = Vector2i(128, 16)
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="SubViewport" unique_id=1226199740]
+offset_right = 40.0
+offset_bottom = 40.0
+value = 100.0
+texture_progress = SubResource("ViewportTexture_27c6l")
+tint_under = Color(1, 0.8862745, 0.5176471, 1)
+tint_over = Color(1, 0.3647059, 0.45882353, 1)
+tint_progress = Color(0.6823746, 0.98238796, 0.64850134, 1)

@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://i6ff2dbpbjjs"]
+
+[ext_resource type="Texture2D" uid="uid://bjrrbj3mgeri3" path="res://Other_Art/characters.png" id="1_xe78f"]
+
+[node name="Control" type="Control" unique_id=1122778411]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Characters" type="Sprite2D" parent="." unique_id=1919718842]
+position = Vector2(956.64746, 503.00003)
+scale = Vector2(20.715677, 20.032787)
+texture = ExtResource("1_xe78f")
